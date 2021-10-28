@@ -451,7 +451,9 @@ RAYGUIDEF bool GuiToggle(Rectangle bounds, const char *text, bool active);      
 RAYGUIDEF int GuiToggleGroup(Rectangle bounds, const char *text, int active);                           // Toggle Group control, returns active toggle index
 RAYGUIDEF bool GuiCheckBox(Rectangle bounds, const char *text, bool checked);                           // Check Box control, returns true when active
 RAYGUIDEF int GuiComboBox(Rectangle bounds, const char *text, int active);                              // Combo Box control, returns selected item index
+RAYGUIDEF int GuiComboBoxEx(Rectangle bounds, const char **items, int itemsCount, int active);
 RAYGUIDEF bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMode);          // Dropdown Box control, returns selected item
+RAYGUIDEF bool GuiDropdownBoxEx(Rectangle bounds, const char **items, int itemCount, int *active, bool editMode);
 RAYGUIDEF bool GuiSpinner(Rectangle bounds, const char *text, int *value, int minValue, int maxValue, bool editMode);     // Spinner control, returns selected value
 RAYGUIDEF bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, int maxValue, bool editMode);    // Value Box control, updates input text with numbers
 RAYGUIDEF bool GuiTextBox(Rectangle bounds, char *text, int textSize, bool editMode);                   // Text Box control, updates input text
@@ -1207,8 +1209,15 @@ bool GuiCheckBox(Rectangle bounds, const char *text, bool checked)
     return checked;
 }
 
+int GuiComboBox(Rectangle bounds, const char *text, int active) {
+    // Get substrings items from text (items pointers, lengths and count)
+    int itemsCount = 0;
+    const char **items = GuiTextSplit(text, &itemsCount, NULL);
+    return GuiComboBoxEx(bounds, items, itemsCount, active);
+}
+
 // Combo Box control, returns selected item index
-int GuiComboBox(Rectangle bounds, const char *text, int active)
+int GuiComboBoxEx(Rectangle bounds, const char **items, int itemsCount, int active)
 {
     GuiControlState state = guiState;
 
@@ -1216,10 +1225,6 @@ int GuiComboBox(Rectangle bounds, const char *text, int active)
 
     Rectangle selector = { (float)bounds.x + bounds.width + GuiGetStyle(COMBOBOX, COMBO_BUTTON_PADDING),
                            (float)bounds.y, (float)GuiGetStyle(COMBOBOX, COMBO_BUTTON_WIDTH), (float)bounds.height };
-
-    // Get substrings items from text (items pointers, lengths and count)
-    int itemsCount = 0;
-    const char **items = GuiTextSplit(text, &itemsCount, NULL);
 
     if (active < 0) active = 0;
     else if (active > itemsCount - 1) active = itemsCount - 1;
@@ -1267,17 +1272,10 @@ int GuiComboBox(Rectangle bounds, const char *text, int active)
     return active;
 }
 
-// Dropdown Box control
-// NOTE: Returns mouse click
-bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMode)
-{
+bool GuiDropdownBoxEx(Rectangle bounds, const char **items, int itemsCount, int *active, bool editMode) {
     GuiControlState state = guiState;
     int itemSelected = *active;
     int itemFocused = -1;
-
-    // Get substrings items from text (items pointers, lengths and count)
-    int itemsCount = 0;
-    const char **items = GuiTextSplit(text, &itemsCount, NULL);
 
     Rectangle boundsOpen = bounds;
     boundsOpen.height = (itemsCount + 1)*(bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_PADDING));
@@ -1381,6 +1379,16 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
 
     *active = itemSelected;
     return pressed;
+}
+
+// Dropdown Box control
+// NOTE: Returns mouse click
+bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMode)
+{
+    // Get substrings items from text (items pointers, lengths and count)
+    int itemsCount = 0;
+    const char **items = GuiTextSplit(text, &itemsCount, NULL);
+    return GuiDropdownBoxEx(bounds, items, itemsCount, active, editMode);
 }
 
 // Text Box control, updates input text
