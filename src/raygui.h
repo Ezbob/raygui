@@ -499,9 +499,9 @@ RAYGUIAPI bool GuiToggle(Rectangle bounds, const char *text, bool active);      
 RAYGUIAPI int GuiToggleGroup(Rectangle bounds, const char *text, int active);                           // Toggle Group control, returns active toggle index
 RAYGUIAPI bool GuiCheckBox(Rectangle bounds, const char *text, bool checked);                           // Check Box control, returns true when active
 RAYGUIAPI int GuiComboBox(Rectangle bounds, const char *text, int active);                              // Combo Box control, returns selected item index
-RAYGUIAPI int GuiComboBoxEx(Rectangle bounds, const char **items, size_t itemCount, int active);                              // Combo Box control, returns selected item index
+RAYGUIAPI int GuiComboBoxEx(Rectangle bounds, const char **items, unsigned itemCount, int active);                              // Combo Box control, returns selected item index
 RAYGUIAPI bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMode);          // Dropdown Box control, returns selected item
-RAYGUIAPI bool GuiDropdownBoxEx(Rectangle bounds, const char **items, size_t itemCount, int *active, bool editMode);          // Dropdown Box control, returns selected item
+RAYGUIAPI bool GuiDropdownBoxEx(Rectangle bounds, const char **items, unsigned itemCount, int *active, bool editMode);          // Dropdown Box control, returns selected item
 RAYGUIAPI bool GuiSpinner(Rectangle bounds, const char *text, int *value, int minValue, int maxValue, bool editMode);     // Spinner control, returns selected value
 RAYGUIAPI bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, int maxValue, bool editMode);    // Value Box control, updates input text with numbers
 RAYGUIAPI bool GuiValueBoxEx(Rectangle bounds, const char *text, float *value, float minValue, float maxValue, bool editMode);    // Value Box control, updates input text with numbers
@@ -1832,7 +1832,7 @@ int GuiComboBox(Rectangle bounds, const char *text, int active)
 
 
 // Combo Box control, returns selected item index
-int GuiComboBoxEx(Rectangle bounds, const char **items, size_t itemCount, int active)
+int GuiComboBoxEx(Rectangle bounds, const char **items, unsigned itemCount, int active)
 {
     GuiControlState state = guiState;
 
@@ -2008,7 +2008,7 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
 }
 
 
-bool GuiDropdownBoxEx(Rectangle bounds, const char **items, size_t itemCount, int *active, bool editMode)
+bool GuiDropdownBoxEx(Rectangle bounds, const char **items, unsigned itemCount, int *active, bool editMode)
 {
     GuiControlState state = guiState;
     int itemSelected = *active;
