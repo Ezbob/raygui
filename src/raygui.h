@@ -485,6 +485,7 @@ RAYGUIAPI void GuiSetStyle(int control, int property, int value);       // Set o
 RAYGUIAPI int GuiGetStyle(int control, int property);                   // Get one style property
 
 // Container/separator controls, useful for controls organization
+RAYGUIAPI void GuiWindowBoxNoClose(Rectangle bounds, const char *title);                                // Window box without close button
 RAYGUIAPI bool GuiWindowBox(Rectangle bounds, const char *title);                                       // Window Box control, shows a window that can be closed
 RAYGUIAPI void GuiGroupBox(Rectangle bounds, const char *text);                                         // Group Box control with text name
 RAYGUIAPI void GuiLine(Rectangle bounds, const char *text);                                             // Line separator control, could contain text
@@ -1375,6 +1376,51 @@ bool GuiWindowBox(Rectangle bounds, const char *title)
     //--------------------------------------------------------------------
 
     return clicked;
+}
+
+void GuiWindowBoxNoClose(Rectangle bounds, const char *title)
+{
+    // NOTE: This define is also used by GuiMessageBox() and GuiTextInputBox()
+    #define WINDOW_STATUSBAR_HEIGHT        22
+
+    //GuiControlState state = guiState;
+    bool clicked = false;
+
+    int statusBarHeight = WINDOW_STATUSBAR_HEIGHT + 2*GuiGetStyle(STATUSBAR, BORDER_WIDTH);
+    statusBarHeight += (statusBarHeight%2);
+
+    Rectangle statusBar = { bounds.x, bounds.y, bounds.width, (float)statusBarHeight };
+    if (bounds.height < statusBarHeight*2.0f) bounds.height = statusBarHeight*2.0f;
+
+    Rectangle windowPanel = { bounds.x, bounds.y + (float)statusBarHeight - 1, bounds.width, bounds.height - (float)statusBarHeight };
+    Rectangle closeButtonRec = { statusBar.x + statusBar.width - GuiGetStyle(STATUSBAR, BORDER_WIDTH) - 20,
+                                 statusBar.y + statusBarHeight/2.0f - 18.0f/2.0f, 18, 18 };
+
+    // Update control
+    //--------------------------------------------------------------------
+    // NOTE: Logic is directly managed by button
+    //--------------------------------------------------------------------
+
+    // Draw control
+    //--------------------------------------------------------------------
+    GuiStatusBar(statusBar, title); // Draw window header as status bar
+    GuiPanel(windowPanel);          // Draw window base
+
+/*
+    // Draw window close button
+    int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
+    int tempTextAlignment = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
+    GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
+#if defined(RAYGUI_NO_RICONS)
+    clicked = GuiButton(closeButtonRec, "x");
+#else
+    clicked = GuiButton(closeButtonRec, GuiIconText(RICON_CROSS_SMALL, NULL));
+#endif
+    GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlignment);
+    //--------------------------------------------------------------------
+*/
 }
 
 // Group Box control with text name
