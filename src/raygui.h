@@ -498,6 +498,7 @@ RAYGUIAPI bool GuiButton(Rectangle bounds, const char *text);                   
 RAYGUIAPI bool GuiLabelButton(Rectangle bounds, const char *text);                                      // Label button control, show true when clicked
 RAYGUIAPI bool GuiToggle(Rectangle bounds, const char *text, bool active);                              // Toggle Button control, returns true when active
 RAYGUIAPI int GuiToggleGroup(Rectangle bounds, const char *text, int active);                           // Toggle Group control, returns active toggle index
+RAYGUIAPI int GuiToggleGroupEx(Rectangle bounds, unsigned itemCount, const char **text, int active);                           // Toggle Group control, returns active toggle index
 RAYGUIAPI bool GuiCheckBox(Rectangle bounds, const char *text, bool checked);                           // Check Box control, returns true when active
 RAYGUIAPI int GuiComboBox(Rectangle bounds, const char *text, int active);                              // Combo Box control, returns selected item index
 RAYGUIAPI int GuiComboBoxEx(Rectangle bounds, const char **items, unsigned itemCount, int active);                              // Combo Box control, returns selected item index
@@ -1756,6 +1757,40 @@ int GuiToggleGroup(Rectangle bounds, const char *text, int active)
 
     return active;
 }
+
+
+// Toggle Group control, returns toggled button index
+int GuiToggleGroupEx(Rectangle bounds, unsigned itemCount, const char **items, int active)
+{
+    #if !defined(TOGGLEGROUP_MAX_ELEMENTS)
+        #define TOGGLEGROUP_MAX_ELEMENTS    32
+    #endif
+
+    float initBoundsX = bounds.x;
+
+    // Get substrings items from text (items pointers)
+    int rows[TOGGLEGROUP_MAX_ELEMENTS] = { 0 };
+
+    int prevRow = rows[0];
+
+    for (int i = 0; i < itemCount; i++)
+    {
+        if (prevRow != rows[i])
+        {
+            bounds.x = initBoundsX;
+            bounds.y += (bounds.height + GuiGetStyle(TOGGLE, GROUP_PADDING));
+            prevRow = rows[i];
+        }
+
+        if (i == active) GuiToggle(bounds, items[i], true);
+        else if (GuiToggle(bounds, items[i], false) == true) active = i;
+
+        bounds.x += (bounds.width + GuiGetStyle(TOGGLE, GROUP_PADDING));
+    }
+
+    return active;
+}
+
 
 // Check Box control, returns true when active
 bool GuiCheckBox(Rectangle bounds, const char *text, bool checked)
