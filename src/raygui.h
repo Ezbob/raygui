@@ -505,6 +505,7 @@ RAYGUIAPI int GuiComboBoxEx(Rectangle bounds, const char **items, unsigned itemC
 RAYGUIAPI bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMode);          // Dropdown Box control, returns selected item
 RAYGUIAPI bool GuiDropdownBoxEx(Rectangle bounds, const char **items, unsigned itemCount, int *active, bool editMode);          // Dropdown Box control, returns selected item
 RAYGUIAPI bool GuiSpinner(Rectangle bounds, const char *text, int *value, int minValue, int maxValue, bool editMode);     // Spinner control, returns selected value
+RAYGUIAPI bool GuiSpinnerEx(Rectangle bounds, const char *text, float *value, float minValue, float maxValue, float increment, bool editMode); // spinner control but with floats
 RAYGUIAPI bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, int maxValue, bool editMode);    // Value Box control, updates input text with numbers
 RAYGUIAPI bool GuiValueBoxEx(Rectangle bounds, const char *text, float *value, float minValue, float maxValue, bool editMode);    // Value Box control, updates input text with numbers
 RAYGUIAPI bool GuiTextBox(Rectangle bounds, char *text, int textSize, bool editMode);                   // Text Box control, updates input text
@@ -2378,6 +2379,81 @@ bool GuiSpinner(Rectangle bounds, const char *text, int *value, int minValue, in
 }
 
 
+bool GuiSpinnerEx(Rectangle bounds, const char *text, float *value, float minValue, float maxValue, float increment, bool editMode)
+{
+    GuiControlState state = guiState;
+
+    bool pressed = false;
+    float tempValue = *value;
+
+    Rectangle spinner = { bounds.x + GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(SPINNER, SPIN_BUTTON_PADDING), bounds.y,
+                          bounds.width - 2*(GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(SPINNER, SPIN_BUTTON_PADDING)), bounds.height };
+    Rectangle leftButtonBound = { (float)bounds.x, (float)bounds.y, (float)GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.height };
+    Rectangle rightButtonBound = { (float)bounds.x + bounds.width - GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.y, (float)GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.height };
+
+    Rectangle textBounds = { 0 };
+    if (text != NULL)
+    {
+        textBounds.width = (float)GetTextWidth(text);
+        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width + GuiGetStyle(SPINNER, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
+        if (GuiGetStyle(SPINNER, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(SPINNER, TEXT_PADDING);
+    }
+
+    // Update control
+    //--------------------------------------------------------------------
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
+    {
+        Vector2 mousePoint = GetMousePosition();
+
+        // Check spinner state
+        if (CheckCollisionPointRec(mousePoint, bounds))
+        {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
+            else state = GUI_STATE_FOCUSED;
+        }
+    }
+
+    if (!editMode)
+    {
+        if (tempValue < minValue) tempValue = minValue;
+        if (tempValue > maxValue) tempValue = maxValue;
+    }
+    //--------------------------------------------------------------------
+
+    // Draw control
+    //--------------------------------------------------------------------
+    // TODO: Set Spinner properties for ValueBox
+    pressed = GuiValueBoxEx(spinner, NULL, &tempValue, minValue, maxValue, editMode);
+
+    // Draw value selector custom buttons
+    // NOTE: BORDER_WIDTH and TEXT_ALIGNMENT forced values
+    int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
+    int tempTextAlign = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
+    GuiSetStyle(BUTTON, BORDER_WIDTH, GuiGetStyle(SPINNER, BORDER_WIDTH));
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
+
+#if defined(RAYGUI_NO_RICONS)
+    if (GuiButton(leftButtonBound, "<")) tempValue -= increment;
+    if (GuiButton(rightButtonBound, ">")) tempValue += increment;
+#else
+    if (GuiButton(leftButtonBound, GuiIconText(RICON_ARROW_LEFT_FILL, NULL))) tempValue -= increment;
+    if (GuiButton(rightButtonBound, GuiIconText(RICON_ARROW_RIGHT_FILL, NULL))) tempValue += increment;
+#endif
+
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlign);
+    GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
+
+    // Draw text label if provided
+    GuiDrawText(text, textBounds, (GuiGetStyle(SPINNER, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_RIGHT)? GUI_TEXT_ALIGN_LEFT : GUI_TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    //--------------------------------------------------------------------
+
+    *value = tempValue;
+    return pressed;
+}
+
+
 bool GuiValueBoxEx(Rectangle bounds, const char *text, float *value, float minValue, float maxValue, bool editMode)
 {
     #if !defined(VALUEBOX_MAX_CHARS)
@@ -2388,7 +2464,7 @@ bool GuiValueBoxEx(Rectangle bounds, const char *text, float *value, float minVa
     bool pressed = false;
 
     char textValue[VALUEBOX_MAX_CHARS + 1] = "\0";
-    sprintf(textValue, "%f", *value);
+    sprintf(textValue, "%.4f", *value);
 
     Rectangle textBounds = { 0 };
     if (text != NULL)
